@@ -20,21 +20,7 @@ services:
         # Where our data will be persisted
       volumes:
         - mysqldb-data:/var/lib/mysql
-  seeder:
-      build: './docker-compose-support/mysql-seed'
-      environment:
-        MYSQL_USER: 'root'
-        MYSQL_PASSWORD: 'password'
-        MYSQL_HOST: 'mysql'
-        HTTP_API_URL: 'core-web:8080'
-        RABBITMQ_DEFAULT_USER: "rabbitmq"
-        RABBITMQ_DEFAULT_PASS: "rabbitmq"
-        RABBITMQ_DEFAULT_VHOST: "/"
-        HTTP_API_KEY: "C1yhtcHTovJYeNTs5uAiTVyQLchziWceS0kpZHe/A6awb2Wdr4dQgeTjPykhFmhGBHdM5VXH3qQXus40s/yxbDpNXyEP3taAey2h2+rZtK6DNsPzIsFeCx906sQmz3ackqsdpwr77/0kqmD06R88ZojQc9rBk0YpFskwd8u57UG5vTw/IHluvNzSnbxqSs4MCmihpqNef3O4st/O+LTroqjgzHHeP/fklnNXgK7RSVXmgjsDxOp0EOBWdoLEambm/BGamM9kHR/JUWcjNIHimqy9oR6zauvVZ3LgRlh43wKDdzIA7ARRcFFJ3oggmkraGaKy/9InCpj+YgQXHoEADA=="
-      links:
-        - mysql
-      volumes:
-        - "./sql:/sql"
+
   redis:
     container_name: redis
     image: redis
@@ -66,6 +52,7 @@ services:
       NAME: "rabbitmq1"
     volumes:
       - "./docker-compose-support/enabled_plugins:/etc/rabbitmq/enabled_plugins"
+
   core-web:
     image: "os-core-web"
     hostname: "core-web"
@@ -83,6 +70,34 @@ services:
       PresencePreAuthPrivateKey: "MIIBOgIBAAJBAO1aRNQrw2iKAKiKwvu1lDZUpklFmqg2V8RgD3nK8a0kJSIYkJ7XeZt46pp9WSUV4ZekxVc2ogIS9VNZ8fpZMFMCAwEAAQJAcASUS1ZEKQhIe0LR9x2hT2rv99DDxvOuxF1ZsG9ZVA68U0hdLZuApqWNiLADW5dUoniyCzpOpObsgYHCuozREQIhAPaO9rfb/NrM9tQ+gLRW1DLcBLADfSCTz41KOORQV029AiEA9nEPNCMB90RzQP/JoB/TmZAHZ/I89UMcpJn0G9CUr08CIHVmoafugjoVOrrZgCNe7O/CwCCnqJ8ogr2+R9S/RLLpAiBCtlZkSbnFgw0kIlolc5gncNrgY63mwvUlBdwUD4HAdwIhANlbalfPp3NAkjTKaoRTR7CFp9a5y2+f1FkySKB1AcB1"
       ASPNETCORE_ENVIRONMENT: "development"
       ASPNETCORE_URLS: "http://0.0.0.0:8080"
+    depends_on:
+      - mysql
+      - redis
+      - mongo
+      - rabbit1
+
+  seeder:
+      build: './docker-compose-support/mysql-seed'
+      environment:
+        MYSQL_USER: 'root'
+        MYSQL_PASSWORD: 'password'
+        MYSQL_HOST: 'mysql'
+        HTTP_API_URL: 'core-web:8080'
+        RABBITMQ_HOST: 'rabbit1'
+        RABBITMQ_DEFAULT_USER: "rabbitmq"
+        RABBITMQ_DEFAULT_PASS: "rabbitmq"
+        RABBITMQ_DEFAULT_VHOST: "/"
+        HTTP_API_KEY: "KSlTGl/aK52sx9o/0arEwpkwbYSk8mhGZvcDUNG+Z4E5F8j5z8K+KcgK9Wv2mSpNHXefrvZnQedO2GQi7PQn1TZyxqxISuYxUM6hhFe/1pV3/yf16IYD8UX/4hDAGEnPTnRE92c/pCWAi+0CezzwdwIcvBIW6CndqdKB1w5uFH3Z3DCqUuGh3uZTHDrTI2lPuQuxYBxLsHPaxkZUClfM3oXnxt208UeVSf8rER1bwKIPkvCQLhKg+Wtoh39xI4nDJH0YhNfwfIMIX+Q7kSZfPA5AmWbCJrGZkmejVtGIEIN1bYh+21CQovJeG4yteuQWYg61rUsr+2bDIlpfxQL8Cw=="
+      depends_on:
+        - mysql
+        - rabbit1
+        - core-web
+      links:
+        - mysql
+        - rabbit1
+        - core-web
+      volumes:
+        - "./sql:/sql"
 
 volumes:
   mysqldb-data:
